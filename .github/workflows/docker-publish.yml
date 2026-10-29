@@ -31,6 +31,8 @@ jobs:
         with:
           context: .
           file: ./Dockerfile
+          # Always fetch the newest node base image so Node security fixes land on rebuild.
+          pull: true
           push: true
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/invoice-parser-api:latest
