@@ -9,7 +9,7 @@ services:
     container_name: invoice-parser-api
     restart: unless-stopped
     ports:
-      - "${PORT:-4000}:4000"
+      - "127.0.0.1:${PORT:-4000}:4000"  # nginx only: Docker publishes ports past UFW (issues/404)
     environment:
       - PORT=4000
       - API_TOKENS=${API_TOKENS}

@@ -21,21 +21,30 @@ const upload = multer({
 app.use(cors());
 app.use(express.json());
 
+// Constant-time comparison of two secrets (lengths are not secret).
+function sameSecret(a, b) {
+  const x = Buffer.from(String(a));
+  const y = Buffer.from(String(b));
+  return x.length === y.length && require('crypto').timingSafeEqual(x, y);
+}
+
 // API Token Authentication Middleware
 const authenticate = (req, res, next) => {
-  const token = req.headers['x-api-key'] || req.query.apiKey;
+  // header only: a key in the URL ends up in proxy and log files (issues/404)
+  const token = req.headers['x-api-key'];
 
   if (!token) {
     return res.status(401).json({
       error: 'Unauthorized',
-      message: 'API key required. Provide it via X-API-Key header or apiKey query parameter.'
+      message: 'API key required. Provide it in the X-API-Key header.'
     });
   }
 
   const validTokens = process.env.API_TOKENS ?
     process.env.API_TOKENS.split(',').map(t => t.trim()) : [];
 
-  if (!validTokens.includes(token)) {
+  // compared in constant time (issues/404)
+  if (!validTokens.some((valid) => sameSecret(valid, token))) {
     return res.status(403).json({
       error: 'Forbidden',
       message: 'Invalid API key.'
