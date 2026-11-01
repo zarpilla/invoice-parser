@@ -6,6 +6,10 @@ on:
       - main
       - master
 
+# the job only reads the code; Docker Hub uses its own secrets (issues/404)
+permissions:
+  contents: read
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
