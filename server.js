@@ -3,7 +3,7 @@ const cors = require('cors');
 const multer = require('multer');
 require('dotenv').config();
 
-const { processInvoicePdf } = require('./parserService');
+const { processInvoicePdf, isTransient } = require('./parserService');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -82,11 +82,24 @@ app.post('/api/parse', authenticate, upload.single('file'), async (req, res) => 
       });
     }
 
-    const invoice = await processInvoicePdf(pdfBuffer);
+    // the tenant receiving the invoice, so the model never returns it as the vendor
+    const field = (name) => (typeof req.body?.[name] === 'string' ? req.body[name].trim().slice(0, 200) : '');
+    const invoice = await processInvoicePdf(pdfBuffer, {
+      customerName: field('customer_name'),
+      customerTaxId: field('customer_tax_id'),
+    });
 
     return res.json({ success: true, data: invoice });
   } catch (error) {
     console.error('Error parsing invoice PDF:', error);
+
+    // Z.ai still overloaded / rate-limited after the retries: worth trying again later.
+    if (isTransient(error)) {
+      return res.status(503).json({
+        error: 'Service Unavailable',
+        message: "El lector de factures està saturat ara mateix. Torna-ho a provar d'aquí a un minut."
+      });
+    }
 
     // pdf-parse / LLM errors are user-facing (bad PDF, no text, bad JSON).
     const message = error && error.message ? error.message : 'Failed to process the invoice PDF.';

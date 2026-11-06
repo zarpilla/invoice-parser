@@ -12,6 +12,9 @@ RUN npm ci --only=production
 # Production stage
 FROM node:24-alpine
 
+# pdftotext keeps the column layout of the invoice tables
+RUN apk add --no-cache poppler-utils
+
 WORKDIR /app
 
 # Copy dependencies from builder

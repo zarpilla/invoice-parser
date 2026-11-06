@@ -15,7 +15,7 @@ services:
       - API_TOKENS=${API_TOKENS}
       - ZAI_API_KEY=${ZAI_API_KEY}
       - ZAI_BASE_URL=${ZAI_BASE_URL:-https://api.z.ai/api/paas/v4/}
-      - ZAI_MODEL=${ZAI_MODEL:-glm-4.7-flash}
+      - ZAI_MODEL=${ZAI_MODEL:-glm-5.3-flash}
     env_file:
       - .env
     healthcheck:
